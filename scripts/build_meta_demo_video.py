@@ -38,20 +38,31 @@ NARRATION_SECTIONS = [
         ),
     },
     {
-        "id": "part2_spatial_studio",
-        "title": "Spatial Studio Video Upload & Auto Surface Mapping",
+        "id": "part2_player_qr_shop",
+        "title": "Live Cinema Player & Pause-to-Shop QR Feature",
         "text": (
-            "Here in the Spatial Studio, we demonstrate live video ingestion. "
-            "Watch as we upload raw footage of Night Highway. "
-            "AdVision immediately loads the video locally and initializes Meta SAM 3.1. "
-            "Within seconds, the computer vision engine scans the footage, detects high-contrast planar signage, "
-            "and automatically locks four-corner homography pins onto the roadside display with ninety-nine percent certainty. "
-            "It computes the sub-pixel 3D perspective matrix, calibrates to ambient lux levels, and configures the editorial prominence cap, "
-            "completely automating what used to require weeks of manual VFX rotoscoping."
+            "Here in the Live Cinema Player, brands live seamlessly inside the cinematic world. "
+            "Notice the RepBull Energy billboard mapped flush into the Tokyo crossing facade. "
+            "When a viewer pauses the film, our interactive Pause-to-Shop card instantly surfaces—complete with a dynamic QR code and direct checkout link. "
+            "Audiences can scan with their phone or click Fuel Up to purchase the featured product immediately, turning high visual attention into direct commerce with zero playback disruption. "
+            "Switching viewer personas instantly transforms the creative in real-time."
         ),
     },
     {
-        "id": "part3_intent_targeting",
+        "id": "part3_spatial_studio",
+        "title": "Spatial Studio Video Upload & Auto Surface Mapping",
+        "text": (
+            "In our Spatial Studio, we demonstrate live video ingestion. "
+            "Watch as we upload raw footage of Night Highway. "
+            "AdVision immediately loads the video and initializes Meta SAM 3.1. "
+            "Within seconds, the computer vision engine scans the footage, detects high-contrast planar signage, "
+            "and automatically locks four-corner homography pins onto the roadside display with ninety-nine percent certainty. "
+            "It computes the sub-pixel 3D perspective matrix and configures the editorial prominence cap, "
+            "completely automating what used to require weeks of manual rotoscoping."
+        ),
+    },
+    {
+        "id": "part4_intent_targeting",
         "title": "Meta AI Intent Synthesizer & Graph API Generator",
         "text": (
             "Under Intent Targeting, we introduce the Meta AI Intent Synthesizer, powered by Meta Llama 3.3. "
@@ -62,29 +73,28 @@ NARRATION_SECTIONS = [
         ),
     },
     {
-        "id": "part4_ad_studio",
+        "id": "part5_ad_studio",
         "title": "Generative Creative Ad Studio",
         "text": (
             "Our built-in Ad Studio takes audience intent and automatically synthesizes production-grade creatives using Meta Muse generative vision models. "
             "It outputs one-to-one square feed units, four-to-five portrait posts, and nine-to-sixteen vertical formats. "
-            "It dynamically localizes headlines and cultural copy across English, Japanese, Telugu, and French, "
+            "It dynamically localizes headlines and cultural copy across English, Japanese, and French, "
             "while running automated brand safety and contrast verification before dispatching to the ad delivery server."
         ),
     },
     {
-        "id": "part5_compare_sync",
+        "id": "part6_compare_sync",
         "title": "4-Way Synchronized Persona Stream Compare",
         "text": (
             "In our 4-Way Persona Sync view, all viewports stream in locked frame synchronization. "
             "One scene, four viewers, and zero storyline interruption. "
             "Alex in the United States sees RepBull Energy. "
             "Ren in Tokyo sees a Japanese Sony Alpha camera. "
-            "Aarav in India sees MRF performance tires, while Leo and Mia on a kids profile receive a public-service civic announcement. "
-            "All overlays render client-side at sixty frames per second using hardware-accelerated CSS 3D transforms."
+            "Aarav in India sees MRF performance tires, while Leo and Mia on a kids profile receive a public-service civic announcement."
         ),
     },
     {
-        "id": "part6_analytics",
+        "id": "part7_analytics",
         "title": "Ad Scene Campaign Analytics & Conclusion",
         "text": (
             "Finally, under Ad Scene Campaign Analytics, the telemetry dashboard tracks viewability, "
@@ -171,11 +181,74 @@ def record_playwright_video(durations):
         time.sleep(rem)
 
         # =====================================================================
-        # PART 2: Spatial Studio Video Upload & Auto Surface Mapping (/studio)
+        # PART 2: Live Cinema Player & Pause-to-Shop QR (/watch/proj-tokyo-nightfall)
         # =====================================================================
         t0 = time.time()
         target_dur2 = durations[1]
-        print(f"[Part 2] Spatial Studio Video Upload & Auto Surface Mapping (Target: {target_dur2:.2f}s)...")
+        print(f"[Part 2] Live Cinema Player & Pause-to-Shop QR (Target: {target_dur2:.2f}s)...")
+        page.goto("http://localhost:3001/watch/proj-tokyo-nightfall")
+        page.wait_for_load_state("networkidle")
+        time.sleep(2.0)
+
+        # 1. Let video stream undisturbed with RepBull on QFRONT
+        time.sleep(4.0)
+
+        # 2. Pause video: Pause-to-Shop card emerges!
+        try:
+            pause_btn = page.locator("button:has(svg.lucide-pause), button:has(svg.lucide-play)").first
+            if pause_btn.is_visible():
+                pause_btn.click()
+                print(">>> PAUSED VIDEO: Pause-to-Shop QR Card emerges! <<<")
+                time.sleep(1.5)
+        except Exception as e:
+            print("Pause btn note:", e)
+
+        # 3. Hover over Featured In-Scene Sponsor card & QR Code
+        try:
+            sponsor_card = page.locator("text=Featured In-Scene Sponsor").first
+            if sponsor_card.is_visible():
+                sponsor_card.hover()
+                print("Hovered over Featured In-Scene Sponsor card")
+                time.sleep(2.0)
+
+            cta_btn = page.locator("button:has-text('Fuel Up'), button:has-text('Shop Product')").first
+            if cta_btn.is_visible():
+                cta_btn.hover()
+                print("Hovered over Fuel Up CTA button")
+                time.sleep(2.5)
+        except Exception as e:
+            print("QR card hover note:", e)
+
+        # 4. Switch persona to Ren Takahashi (Japan) to show dynamic personalization
+        try:
+            ren_btn = page.locator("button:has-text('Ren Takahashi')").first
+            if ren_btn.is_visible():
+                ren_btn.click()
+                print("Switched persona to Ren Takahashi (Japan)")
+                time.sleep(3.0)
+        except Exception as e:
+            print("Persona switch note:", e)
+
+        # 5. Switch back to Alex Miller (United States)
+        try:
+            alex_btn = page.locator("button:has-text('Alex Miller')").first
+            if alex_btn.is_visible():
+                alex_btn.click()
+                print("Switched back to Alex Miller (United States)")
+                time.sleep(2.0)
+        except Exception as e:
+            print("Persona switch back note:", e)
+
+        elapsed = time.time() - t0
+        rem = max(0.5, target_dur2 - elapsed)
+        time.sleep(rem)
+
+        # =====================================================================
+        # PART 3: Spatial Studio Video Upload & Auto Surface Mapping (/studio)
+        # =====================================================================
+        t0 = time.time()
+        target_dur3 = durations[2]
+        print(f"[Part 3] Spatial Studio Video Upload & Auto Surface Mapping (Target: {target_dur3:.2f}s)...")
         page.goto("http://localhost:3001/studio")
         page.wait_for_load_state("networkidle")
         time.sleep(2.0)
@@ -226,15 +299,15 @@ def record_playwright_video(durations):
         time.sleep(1.5)
 
         elapsed = time.time() - t0
-        rem = max(0.5, target_dur2 - elapsed)
+        rem = max(0.5, target_dur3 - elapsed)
         time.sleep(rem)
 
         # =====================================================================
-        # PART 3: Meta AI Intent Synthesizer (/targeting)
+        # PART 4: Meta AI Intent Synthesizer (/targeting)
         # =====================================================================
         t0 = time.time()
-        target_dur3 = durations[2]
-        print(f"[Part 3] Meta AI Intent Synthesizer (Target: {target_dur3:.2f}s)...")
+        target_dur4 = durations[3]
+        print(f"[Part 4] Meta AI Intent Synthesizer (Target: {target_dur4:.2f}s)...")
         page.goto("http://localhost:3001/targeting")
         page.wait_for_load_state("networkidle")
         time.sleep(2.0)
@@ -284,15 +357,15 @@ def record_playwright_video(durations):
             print("Graph toggle note:", e)
 
         elapsed = time.time() - t0
-        rem = max(0.5, target_dur3 - elapsed)
+        rem = max(0.5, target_dur4 - elapsed)
         time.sleep(rem)
 
         # =====================================================================
-        # PART 4: Generative Creative Ad Studio (/ad-studio)
+        # PART 5: Generative Creative Ad Studio (/ad-studio)
         # =====================================================================
         t0 = time.time()
-        target_dur4 = durations[3]
-        print(f"[Part 4] Generative Ad Studio (Target: {target_dur4:.2f}s)...")
+        target_dur5 = durations[4]
+        print(f"[Part 5] Generative Ad Studio (Target: {target_dur5:.2f}s)...")
         page.goto("http://localhost:3001/ad-studio")
         page.wait_for_load_state("networkidle")
         time.sleep(2.0)
@@ -332,15 +405,15 @@ def record_playwright_video(durations):
             print("Approve note:", e)
 
         elapsed = time.time() - t0
-        rem = max(0.5, target_dur4 - elapsed)
+        rem = max(0.5, target_dur5 - elapsed)
         time.sleep(rem)
 
         # =====================================================================
-        # PART 5: 4-Way Synchronized Persona Stream Compare (/compare)
+        # PART 6: 4-Way Synchronized Persona Stream Compare (/compare)
         # =====================================================================
         t0 = time.time()
-        target_dur5 = durations[4]
-        print(f"[Part 5] 4-Way Synchronized Stream Compare (Target: {target_dur5:.2f}s)...")
+        target_dur6 = durations[5]
+        print(f"[Part 6] 4-Way Synchronized Stream Compare (Target: {target_dur6:.2f}s)...")
         page.goto("http://localhost:3001/compare")
         page.wait_for_load_state("networkidle")
         time.sleep(2.0)
@@ -384,15 +457,15 @@ def record_playwright_video(durations):
         time.sleep(2.0)
 
         elapsed = time.time() - t0
-        rem = max(0.5, target_dur5 - elapsed)
+        rem = max(0.5, target_dur6 - elapsed)
         time.sleep(rem)
 
         # =====================================================================
-        # PART 6: Ad Scene Campaign Analytics & Conclusion (/analytics)
+        # PART 7: Ad Scene Campaign Analytics & Conclusion (/analytics)
         # =====================================================================
         t0 = time.time()
-        target_dur6 = durations[5]
-        print(f"[Part 6] Ad Scene Campaign Analytics & Conclusion (Target: {target_dur6:.2f}s)...")
+        target_dur7 = durations[6]
+        print(f"[Part 7] Ad Scene Campaign Analytics & Conclusion (Target: {target_dur7:.2f}s)...")
         page.goto("http://localhost:3001/analytics")
         page.wait_for_load_state("networkidle")
         time.sleep(2.0)
@@ -420,7 +493,7 @@ def record_playwright_video(durations):
         time.sleep(1.5)
 
         elapsed = time.time() - t0
-        rem = max(0.5, target_dur6 - elapsed)
+        rem = max(0.5, target_dur7 - elapsed)
         time.sleep(rem)
 
         # Finish recording
