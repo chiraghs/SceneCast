@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AdVision TV Experience</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #000;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #fff;
+    }
+    #tv-container {
+      position: relative;
+      width: 1920px;
+      height: 1080px;
+      background: #000;
+    }
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* TV HUD */
+    .hud-header {
+      position: absolute;
+      top: 40px;
+      left: 60px;
+      right: 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 20;
+      opacity: 0.85;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+    }
+    .hud-title {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .hud-badge {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .hud-device {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.6);
+      font-family: monospace;
+    }
+
+    /* ANNOYING POP-UP COMMERCIAL OVERLAY */
+    #annoying-ad {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(8px);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+    #annoying-ad.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .ad-card {
+      background: linear-gradient(135deg, #ffcc00, #ff9900);
+      color: #000;
+      padding: 40px 60px;
+      border-radius: 24px;
+      text-align: center;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.8), 0 0 40px rgba(255, 204, 0, 0.5);
+      border: 4px solid #fff;
+      max-width: 900px;
+      animation: pulseAd 1.5s infinite alternate;
+    }
+    @keyframes pulseAd {
+      0% { transform: scale(1); }
+      100% { transform: scale(1.02); }
+    }
+    .ad-pill {
+      display: inline-block;
+      background: #cc0000;
+      color: #fff;
+      font-weight: 900;
+      font-size: 16px;
+      padding: 6px 18px;
+      border-radius: 30px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .ad-headline {
+      font-size: 48px;
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 15px;
+    }
+    .ad-sub {
+      font-size: 22px;
+      font-weight: 600;
+      color: #222;
+      margin-bottom: 25px;
+    }
+    .ad-countdown {
+      background: rgba(0,0,0,0.8);
+      color: #fff;
+      padding: 10px 24px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 18px;
+      display: inline-block;
+    }
+
+    /* SOLUTION CALLOUT (ADVISION IN-SCENE) */
+    #solution-banner {
+      position: absolute;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(10, 15, 30, 0.88);
+      border: 1px solid rgba(59, 130, 246, 0.6);
+      box-shadow: 0 10px 40px rgba(0, 100, 255, 0.35);
+      border-radius: 20px;
+      padding: 20px 40px;
+      display: flex;
+      align-items: center;
+      gap: 25px;
+      z-index: 40;
+      opacity: 0;
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #solution-banner.active {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    .sol-logo {
+      font-size: 32px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #3b82f6, #60a5fa, #93c5fd);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -1px;
+    }
+    .sol-desc {
+      display: flex;
+      flex-direction: column;
+    }
+    .sol-tag {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #60a5fa;
+    }
+    .sol-text {
+      font-size: 22px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    /* IN-SCENE TRACKED BILLBOARD OVERLAY */
+    #billboard-overlay {
+      position: absolute;
+      top: 175px;
+      left: 405px;
+      width: 265px;
+      height: 165px;
+      transform: matrix3d(0.85, 0.12, 0, 0.0003, -0.05, 0.98, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+      border: 3px solid #ffd600;
+      border-radius: 8px;
+      box-shadow: 0 0 40px rgba(255, 214, 0, 0.85), inset 0 0 15px rgba(255, 214, 0, 0.4);
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+      z-index: 30;
+      background: #001a30;
+    }
+    #billboard-overlay.active {
+      opacity: 1;
+    }
+    .billboard-content {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 16px;
+      color: #fff;
+      background: linear-gradient(135deg, #0f172a, #1e3a8a);
+    }
+    .bb-brand {
+      font-size: 14px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #60a5fa;
+    }
+    .bb-headline {
+      font-size: 17px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+    .bb-cta {
+      background: #3b82f6;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 12px;
+      border-radius: 20px;
+      display: inline-block;
+      align-self: flex-start;
+    }
+
+    /* FINAL OUTRO CARD */
+    #outro-card {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, #0a1128 0%, #00020a 100%);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.6s ease;
+    }
+    #outro-card.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .outro-title {
+      font-size: 72px;
+      font-weight: 900;
+      letter-spacing: -2px;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #ffffff, #60a5fa, #3b82f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .outro-sub {
+      font-size: 26px;
+      font-weight: 600;
+      color: #94a3b8;
+      max-width: 800px;
+      margin-bottom: 30px;
+    }
+    .outro-pills {
+      display: flex;
+      gap: 16px;
+    }
+    .outro-pill {
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      color: #93c5fd;
+      padding: 8px 20px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <div id="tv-container">
+    <video id="movie-video" src="/media/shibuya-crossing.mp4" autoplay loop muted playsinline></video>
+
+    <!-- TV HUD -->
+    <div class="hud-header">
+      <div class="hud-title">
+        <span>SHIBUYA NIGHTS</span>
+        <span class="hud-badge">4K HDR</span>
+      </div>
+      <div class="hud-device">Living Room TV · 60 FPS</div>
+    </div>
+
+    <!-- ANNOYING POP-UP COMMERCIAL (0:03 - 0:08) -->
+    <div id="annoying-ad">
+      <div class="ad-card">
+        <div class="ad-pill">⚠ UNACCEPTABLE COMMERCIAL BREAK</div>
+        <div class="ad-headline">BUY DISCOUNT INSURANCE NOW!</div>
+        <div class="ad-sub">Call 1-800-CHEAP-RATES · Don't Wait!</div>
+        <div class="ad-countdown">Ad 1 of 2 · Video plays in 15s (Cannot Skip)</div>
+      </div>
+    </div>
+
+    <!-- IN-SCENE TRACKED BILLBOARD (0:09 - 0:16) WITH REAL REPBULL ENERGY AD -->
+    <div id="billboard-overlay">
+      <img src="/brands/repbull.jpg" alt="RepBull Energy Ad" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+      <div style="position: absolute; bottom: 8px; left: 8px; background: rgba(0,26,48,0.9); color: #ffd600; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 4px; letter-spacing: 0.5px; border: 1px solid rgba(255,214,0,0.5);">
+        RepBull Energy · Zero Sugar
+      </div>
+    </div>
+
+    <!-- ADVISION SOLUTION BANNER -->
+    <div id="solution-banner">
+      <div class="sol-logo">AdVision</div>
+      <div class="sol-desc">
+        <div class="sol-tag">In-Scene AI Placement · Zero Disruptions</div>
+        <div class="sol-text">The ad lives inside the movie. RepBull Energy personalized for the viewer.</div>
+      </div>
+    </div>
+
+    <!-- OUTRO CARD (0:16 - 0:20) -->
+    <div id="outro-card">
+      <div class="outro-title">AdVision</div>
+      <div class="outro-sub">Zero Commercial Interruptions. Pure Cinematic Entertainment.</div>
+      <div class="outro-pills">
+        <div class="outro-pill">Meta SAM 3.1</div>
+        <div class="outro-pill">Meta Llama 3.3</div>
+        <div class="outro-pill">Meta Audience Network</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Timeline Director
+    const annoyingAd = document.getElementById('annoying-ad');
+    const billboard = document.getElementById('billboard-overlay');
+    const solutionBanner = document.getElementById('solution-banner');
+    const outroCard = document.getElementById('outro-card');
+
+    // Timeline Sequence:
+    // 0:00 - 0:03: Movie plays undisturbed
+    // 0:03 - 0:08: Annoying unskippable pop-up ruins the scene!
+    setTimeout(() => {
+      annoyingAd.classList.add('active');
+    }, 3000);
+
+    // 0:08.5: Pop-up disappears!
+    setTimeout(() => {
+      annoyingAd.classList.remove('active');
+    }, 8500);
+
+    // 0:09: AdVision seamlessly renders in-scene billboard inside the movie!
+    setTimeout(() => {
+      billboard.classList.add('active');
+      solutionBanner.classList.add('active');
+    }, 9200);
+
+    // 0:16.5: Final outro card
+    setTimeout(() => {
+      outroCard.classList.add('active');
+    }, 16500);
+  </script>
+</body>
+</html>
